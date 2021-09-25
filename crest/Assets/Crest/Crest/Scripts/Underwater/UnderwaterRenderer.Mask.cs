@@ -13,6 +13,8 @@ namespace Crest
         internal const string SHADER_OCEAN_MASK = "Hidden/Crest/Underwater/Ocean Mask";
         internal const int k_ShaderPassOceanSurfaceMask = 0;
         internal const int k_ShaderPassOceanHorizonMask = 1;
+        internal const string k_ComputeShaderFillMaskArtefacts = "CrestFillMaskArtefacts";
+        internal const string k_ComputeShaderKernelFillMaskArtefacts = "FillMaskArtefacts";
 
         public static readonly int sp_CrestOceanMaskTexture = Shader.PropertyToID("_CrestOceanMaskTexture");
         public static readonly int sp_CrestOceanMaskDepthTexture = Shader.PropertyToID("_CrestOceanMaskDepthTexture");
@@ -23,6 +25,12 @@ namespace Crest
         PropertyWrapperMaterial _oceanMaskMaterial;
         RenderTexture _maskTexture;
         RenderTexture _depthTexture;
+
+        ComputeShader _fixMaskComputeShader;
+        int _fixMaskKernel;
+        uint _fixMaskThreadGroupSizeX;
+        uint _fixMaskThreadGroupSizeY;
+        uint _fixMaskThreadGroupSizeZ;
 
         void SetupOceanMask()
         {
@@ -38,6 +46,16 @@ namespace Crest
                     name = "Ocean Mask",
                 };
             }
+
+            _fixMaskComputeShader = ComputeShaderHelpers.LoadShader(k_ComputeShaderFillMaskArtefacts);
+            _fixMaskKernel = _fixMaskComputeShader.FindKernel(k_ComputeShaderKernelFillMaskArtefacts);
+            _fixMaskComputeShader.GetKernelThreadGroupSizes
+            (
+                _fixMaskKernel,
+                out _fixMaskThreadGroupSizeX,
+                out _fixMaskThreadGroupSizeY,
+                out _fixMaskThreadGroupSizeZ
+            );
         }
 
         void OnPreRenderOceanMask()
@@ -65,6 +83,19 @@ namespace Crest
                 _farPlaneMultiplier,
                 _debug._disableOceanMask
             );
+
+            if (!_debug._disableArtifactCorrection)
+            {
+                _fixMaskComputeShader.SetTexture(_fixMaskKernel, sp_CrestOceanMaskTexture, _maskTexture, 0);
+                _oceanMaskCommandBuffer.DispatchCompute
+                (
+                    _fixMaskComputeShader,
+                    _fixMaskKernel,
+                    _maskTexture.width / (int)_fixMaskThreadGroupSizeX,
+                    _maskTexture.height / (int)_fixMaskThreadGroupSizeY,
+                    (int)_fixMaskThreadGroupSizeZ
+                );
+            }
         }
 
         internal static void InitialiseMaskTextures(RenderTextureDescriptor desc, ref RenderTexture textureMask, ref RenderTexture depthBuffer)
@@ -86,6 +117,7 @@ namespace Crest
                 // @Memory: We could investigate making this an 8-bit texture instead to reduce GPU memory usage.
                 // We could also potentially try a half res mask as the mensicus could mask res issues.
                 textureMask.format = RenderTextureFormat.RHalf;
+                textureMask.enableRandomWrite = true;
                 textureMask.Create();
 
                 depthBuffer = new RenderTexture(desc);
