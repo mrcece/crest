@@ -56,6 +56,7 @@ float CrestLinearEyeDepth(const float i_rawDepth)
 #endif // _PROJECTION
 }
 
+#ifndef CREST_NO_MSAA_HELPERS
 // Works for all pipelines.
 float CrestMultiSampleSceneDepth(const float i_rawDepth, const float2 i_positionNDC)
 {
@@ -75,5 +76,6 @@ float CrestMultiSampleSceneDepth(const float i_rawDepth, const float2 i_position
 
 	return rawDepth;
 }
+#endif
 
 #endif // CREST_OCEAN_SHADER_HELPERS_H

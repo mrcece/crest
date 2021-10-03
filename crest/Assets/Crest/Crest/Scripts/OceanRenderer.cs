@@ -914,6 +914,8 @@ namespace Crest
 
             WritePerFrameMaterialParams();
 
+            LateUpdateGlobalMaterialProperties();
+
 #if UNITY_EDITOR
             if (EditorApplication.isPlaying || !_showOceanProxyPlane)
 #endif
@@ -934,6 +936,36 @@ namespace Crest
                 }
             }
 #endif
+        }
+
+        void LateUpdateGlobalMaterialProperties()
+        {
+            Shader.SetGlobalVector("_CrestDepthFogDensity", OceanMaterial.GetVector("_DepthFogDensity"));
+            Shader.SetGlobalColor("_CrestDiffuse", OceanMaterial.GetColor("_Diffuse"));
+            Shader.SetGlobalColor("_CrestDiffuseGrazing", OceanMaterial.GetColor("_DiffuseGrazing"));
+            Shader.SetGlobalColor("_CrestDiffuseShadow", OceanMaterial.GetColor("_DiffuseShadow"));
+            Shader.SetGlobalColor("_CrestSubSurfaceColour", OceanMaterial.GetColor("_SubSurfaceColour"));
+            Shader.SetGlobalFloat("_CrestSubSurfaceSun", OceanMaterial.GetFloat("_SubSurfaceSun"));
+            Shader.SetGlobalFloat("_CrestSubSurfaceBase", OceanMaterial.GetFloat("_SubSurfaceBase"));
+            Shader.SetGlobalFloat("_CrestSubSurfaceSunFallOff", OceanMaterial.GetFloat("_SubSurfaceSunFallOff"));
+
+            if (OceanMaterial.IsKeywordEnabled("_SUBSURFACESCATTERING_ON"))
+            {
+                Shader.EnableKeyword("CREST_SUBSURFACESCATTERING_ON");
+            }
+            else
+            {
+                Shader.DisableKeyword("CREST_SUBSURFACESCATTERING_ON");
+            }
+
+            if (OceanMaterial.IsKeywordEnabled("_SHADOWS_ON"))
+            {
+                Shader.EnableKeyword("CREST_SHADOWS_ON");
+            }
+            else
+            {
+                Shader.DisableKeyword("CREST_SHADOWS_ON");
+            }
         }
 
         void WritePerFrameMaterialParams()
