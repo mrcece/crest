@@ -41,6 +41,8 @@ namespace Crest
         // SRP version needs access to this externally, hence public get
         public CommandBuffer BufCopyShadowMap { get; private set; }
 
+        CommandBuffer _screenSpaceShadowMapCommandBuffer;
+
         PropertyWrapperCompute _renderProperties;
         ComputeShader _updateShadowShader;
         private int krnl_UpdateShadow;
@@ -54,6 +56,7 @@ namespace Crest
         readonly int sp_MainCameraProjectionMatrix = Shader.PropertyToID("_MainCameraProjectionMatrix");
         readonly int sp_SimDeltaTime = Shader.PropertyToID("_SimDeltaTime");
         readonly int sp_LD_TexArray_Target = Shader.PropertyToID("_LD_TexArray_Target");
+        static readonly int sp_CrestScreenSpaceShadowTexture = Shader.PropertyToID("_CrestScreenSpaceShadowTexture");
 
         public override SimSettingsBase SettingsBase => Settings;
         public SettingsType Settings => _ocean._simSettingsShadow != null ? _ocean._simSettingsShadow : GetDefaultSettings<SettingsType>();
@@ -118,7 +121,31 @@ namespace Crest
                 return false;
             }
 
+            if (QualitySettings.shadows == ShadowQuality.Disable)
+            {
+                Debug.LogError("Crest: Shadows must be enabled in the quality settings to enable ocean shadowing.", OceanRenderer.Instance);
+                return false;
+            }
+
             return true;
+        }
+
+        void SetUpScreenSpaceShadows()
+        {
+            // Make the screen-space shadow texture available for the ocean shader for caustic occlusion.
+            _screenSpaceShadowMapCommandBuffer = new CommandBuffer()
+            {
+                name = "Screen-Space Shadow Data"
+            };
+            _screenSpaceShadowMapCommandBuffer.SetGlobalTexture(sp_CrestScreenSpaceShadowTexture, BuiltinRenderTextureType.CurrentActive);
+            _mainLight.AddCommandBuffer(LightEvent.AfterScreenspaceMask, _screenSpaceShadowMapCommandBuffer);
+        }
+
+        void CleanUpScreenSpaceShadows()
+        {
+            _mainLight.RemoveCommandBuffer(LightEvent.AfterScreenspaceMask, _screenSpaceShadowMapCommandBuffer);
+            _screenSpaceShadowMapCommandBuffer.Release();
+            _screenSpaceShadowMapCommandBuffer = null;
         }
 
         public override void BuildCommandBuffer(OceanRenderer ocean, CommandBuffer buf)
@@ -170,11 +197,15 @@ namespace Crest
                 BufCopyShadowMap = new CommandBuffer();
                 BufCopyShadowMap.name = "Shadow data";
                 _mainLight.AddCommandBuffer(LightEvent.BeforeScreenspaceMask, BufCopyShadowMap);
+
+                SetUpScreenSpaceShadows();
             }
             else if (!s_processData && BufCopyShadowMap != null)
             {
                 _mainLight.RemoveCommandBuffer(LightEvent.BeforeScreenspaceMask, BufCopyShadowMap);
                 BufCopyShadowMap = null;
+
+                CleanUpScreenSpaceShadows();
             }
 
             if (!s_processData)
