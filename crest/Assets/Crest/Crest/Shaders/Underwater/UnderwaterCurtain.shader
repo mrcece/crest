@@ -38,6 +38,7 @@ Shader "Crest/Underwater Curtain"
 			#pragma fragment Frag
 
 			#pragma multi_compile_instancing
+			#pragma multi_compile_shadowcollector
 
 			// Use multi_compile because these keywords are copied over from the ocean material. With shader_feature,
 			// the keywords would be stripped from builds. Unused shader variants are stripped using a build processor.
@@ -56,6 +57,8 @@ Shader "Crest/Underwater Curtain"
 			#include "Lighting.cginc"
 
 			#include "../Helpers/BIRP/Core.hlsl"
+
+			#include "../Helpers/BIRP/ScreenSpaceShadows.hlsl"
 
 			#include "../OceanGlobals.hlsl"
 			#include "../OceanInputsDriven.hlsl"

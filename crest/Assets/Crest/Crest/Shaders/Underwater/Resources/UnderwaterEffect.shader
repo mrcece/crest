@@ -8,6 +8,8 @@ Shader "Hidden/Crest/Underwater/Underwater Effect"
 	#pragma vertex Vert
 	#pragma fragment Frag
 
+	#pragma multi_compile_shadowcollector
+
 	// Use multi_compile because these keywords are copied over from the ocean material. With shader_feature,
 	// the keywords would be stripped from builds. Unused shader variants are stripped using a build processor.
 	#pragma multi_compile_local __ _SUBSURFACESCATTERING_ON
@@ -30,6 +32,8 @@ Shader "Hidden/Crest/Underwater/Underwater Effect"
 
 	#include "../../Helpers/BIRP/Core.hlsl"
 	#include "../../Helpers/BIRP/InputsDriven.hlsl"
+
+	#include "../../Helpers/BIRP/ScreenSpaceShadows.hlsl"
 
 	#include "../../OceanGlobals.hlsl"
 	#include "../../OceanInputsDriven.hlsl"

@@ -230,6 +230,7 @@ Shader "Crest/Ocean"
 			#pragma target 3.0
 			#pragma multi_compile_fog
 			#pragma multi_compile_instancing
+			#pragma multi_compile_shadowcollector
 
 			#pragma shader_feature_local _APPLYNORMALMAPPING_ON
 			#pragma shader_feature_local _COMPUTEDIRECTIONALLIGHT_ON
@@ -269,6 +270,8 @@ Shader "Crest/Ocean"
 
 			#include "Helpers/BIRP/Core.hlsl"
 			#include "Helpers/BIRP/InputsDriven.hlsl"
+
+			#include "Helpers/BIRP/ScreenSpaceShadows.hlsl"
 
 			#include "OceanGlobals.hlsl"
 			#include "OceanInputsDriven.hlsl"
