@@ -33,7 +33,7 @@ Shader "Hidden/Crest/Underwater/Underwater Effect"
 	#include "../../Helpers/BIRP/Core.hlsl"
 	#include "../../Helpers/BIRP/InputsDriven.hlsl"
 
-	#include "../../Helpers/BIRP/ScreenSpaceShadows.hlsl"
+	// #include "../../Helpers/BIRP/ScreenSpaceShadows.hlsl"
 
 	#include "../../OceanGlobals.hlsl"
 	#include "../../OceanInputsDriven.hlsl"
@@ -105,7 +105,7 @@ Shader "Hidden/Crest/Underwater/Underwater Effect"
 			float3 scenePos = _WorldSpaceCameraPos - view * sceneZ / dot(unity_CameraToWorld._m02_m12_m22, -view);
 			const float3 lightDir = _WorldSpaceLightPos0.xyz;
 			const half3 lightCol = _LightColor0;
-			sceneColour = ApplyUnderwaterEffect(scenePos, sceneColour, lightCol, lightDir, rawDepth, sceneZ, view, isOceanSurface);
+			sceneColour = ApplyUnderwaterEffect(input.uv, scenePos, sceneColour, lightCol, lightDir, rawDepth, sceneZ, view, isOceanSurface);
 		}
 
 		return half4(wt * sceneColour, 1.0);

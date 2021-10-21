@@ -56,6 +56,7 @@ half3 ScatterColour
 #if _CAUSTICS_ON
 void ApplyCaustics
 (
+	in const half2 i_uvDepth,
 	in const float3 i_scenePos,
 	in const half3 i_lightDir,
 	in const float i_sceneZ,
@@ -96,18 +97,25 @@ void ApplyCaustics
 	{
 		// Apply shadow maps to caustics.
 		{
-			const float4 scenePosition = float4(i_scenePos, 1.0);
-			fixed4 cascadeWeights = GET_CASCADE_WEIGHTS(scenePosition, i_sceneZ);
-			float4 shadowCoord = GET_SHADOW_COORDINATES(scenePosition, cascadeWeights);
-			fixed shadow = UNITY_SAMPLE_SHADOW(_ShadowMapTexture, shadowCoord);
-			shadow = lerp(_LightShadowData.r, 1.0, shadow);
-			causticsStrength *= shadow;
+			// #ifdef SHADOWS_SCREEN
+			// causticsStrength = SHADOW_ATTENUATION(mul(unity_CameraInvProjection, float4(i_scenePos, 1.0)));
+			// causticsStrength = UnityComputeForwardShadows(0, float4(i_scenePos, 1.0), 0);
+			// #endif
+			// const float4 scenePosition = float4(i_scenePos, 1.0);
+			// fixed4 cascadeWeights = GET_CASCADE_WEIGHTS(scenePosition, i_sceneZ);
+			// float4 shadowCoord = GET_SHADOW_COORDINATES(scenePosition, cascadeWeights);
+			// fixed shadow = UNITY_SAMPLE_SHADOW(_SunCascadedShadowMap, shadowCoord);
+			// shadow = lerp(_LightShadowData.r, 1.0, shadow);
+			float shadow = SAMPLE_TEXTURE2D_X(_CrestScreenSpaceShadowTexture, sampler_CrestScreenSpaceShadowTexture, i_uvDepth);
+			causticsStrength = shadow;
 		}
 	}
 #endif // _SHADOWS_ON
 
 	io_sceneColour.xyz *= 1.0 + causticsStrength *
 		(0.5*tex2Dlod(_CausticsTexture, cuv1).xyz + 0.5*tex2Dlod(_CausticsTexture, cuv2).xyz - _CausticsTextureAverage);
+
+		io_sceneColour.xyz = causticsStrength;
 }
 #endif // _CAUSTICS_ON
 
@@ -174,7 +182,7 @@ half3 OceanEmission
 		sceneColour = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_BackgroundTexture, uvBackgroundRefract).rgb;
 #if _CAUSTICS_ON
 		float3 scenePos = _WorldSpaceCameraPos - i_view * i_sceneZ / dot(unity_CameraToWorld._m02_m12_m22, -i_view);
-		ApplyCaustics(scenePos, i_lightDir, i_sceneZ, i_normals, i_underwater, sceneColour, cascadeData0, cascadeData1);
+		ApplyCaustics(i_uvDepth, scenePos, i_lightDir, i_sceneZ, i_normals, i_underwater, sceneColour, cascadeData0, cascadeData1);
 #endif
 		alpha = 1.0 - exp(-_DepthFogDensity.xyz * depthFogDistance);
 	}

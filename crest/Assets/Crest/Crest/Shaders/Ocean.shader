@@ -271,7 +271,7 @@ Shader "Crest/Ocean"
 			#include "Helpers/BIRP/Core.hlsl"
 			#include "Helpers/BIRP/InputsDriven.hlsl"
 
-			#include "Helpers/BIRP/ScreenSpaceShadows.hlsl"
+			// #include "Helpers/BIRP/ScreenSpaceShadows.hlsl"
 
 			#include "OceanGlobals.hlsl"
 			#include "OceanInputsDriven.hlsl"
